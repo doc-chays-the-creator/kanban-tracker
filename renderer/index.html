@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Kanban Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">&#9776;</div>
+        <h1>Kanban Tracker</h1>
+      </div>
+      <div class="header-stats" id="header-stats">0 tasks</div>
+    </header>
+
+    <div class="board">
+
+      <!-- TO-DO -->
+      <div class="column" data-col="todo">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-todo"></span>
+            <span class="column-title">To&#8209;Do</span>
+          </div>
+          <span class="card-count" id="count-todo">0</span>
+        </div>
+        <div class="cards-container" id="cards-todo" data-col="todo"></div>
+        <button class="add-btn" data-col="todo">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+      <!-- IN PROGRESS -->
+      <div class="column" data-col="in-progress">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-progress"></span>
+            <span class="column-title">In Progress</span>
+          </div>
+          <span class="card-count" id="count-in-progress">0</span>
+        </div>
+        <div class="cards-container" id="cards-in-progress" data-col="in-progress"></div>
+        <button class="add-btn" data-col="in-progress">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+      <!-- FINISHED -->
+      <div class="column" data-col="done">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-done"></span>
+            <span class="column-title">Finished</span>
+          </div>
+          <span class="card-count" id="count-done">0</span>
+        </div>
+        <div class="cards-container" id="cards-done" data-col="done"></div>
+        <button class="add-btn" data-col="done">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Card</h2>
+        <button class="modal-close" id="modal-close-btn">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-column">
+
+        <div class="form-group">
+          <label for="card-title">Title <span class="required">*</span></label>
+          <input type="text" id="card-title" placeholder="What needs to be done?">
+        </div>
+
+        <div class="form-group">
+          <label for="card-desc">Description</label>
+          <textarea id="card-desc" placeholder="Optional details..." rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <div class="category-selector" id="category-selector">
+            <button class="category-btn active" data-cat="uncategorized">Uncategorized</button>
+            <button class="category-btn" data-cat="personal">Personal</button>
+            <button class="category-btn" data-cat="professional">Professional</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Priority</label>
+          <div class="priority-selector" id="priority-selector">
+            <button class="priority-btn" data-p="low">Low</button>
+            <button class="priority-btn active" data-p="medium">Medium</button>
+            <button class="priority-btn" data-p="high">High</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+        <button class="btn-primary" id="modal-save-btn">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

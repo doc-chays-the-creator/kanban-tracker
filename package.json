@@ -1,0 +1,13 @@
+{
+  "name": "kanban-tracker",
+  "version": "1.0.0",
+  "description": "Personal Kanban activity tracker",
+  "main": "main.js",
+  "scripts": {
+    "start": "SET ELECTRON_RUN_AS_NODE=&& node_modules\\.bin\\electron.cmd .",
+    "dev": "SET ELECTRON_RUN_AS_NODE=&& node_modules\\.bin\\electron.cmd . --inspect"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3"
+  }
+}
