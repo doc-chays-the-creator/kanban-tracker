@@ -3,6 +3,8 @@ let board = { cards: [] }
 let selectedPriority = 'medium'
 let selectedCategory = 'uncategorized'
 let draggedId = null
+let activeTab = 'board'
+const colSort = { 'todo': null, 'in-progress': null, 'done': null }
 
 const COLUMNS = ['todo', 'in-progress', 'done']
 
@@ -14,6 +16,9 @@ async function init() {
   setupColumnDropZones()
   setupModalHandlers()
   setupKeyboard()
+  setupTabs()
+  setupLearnedSave()
+  setupSortControls()
 }
 
 // ─── Render ───────────────────────────────────────────────────
@@ -21,7 +26,7 @@ function renderBoard() {
   let totalCards = 0
 
   COLUMNS.forEach(col => {
-    const cards = getColCards(col)
+    const cards = getDisplayCards(col)
     totalCards += cards.length
 
     document.getElementById(`count-${col}`).textContent = cards.length
@@ -48,6 +53,20 @@ function getColCards(col) {
   return board.cards
     .filter(c => c.columnId === col)
     .sort((a, b) => a.order - b.order)
+}
+
+function getDisplayCards(col) {
+  const cards  = getColCards(col)
+  const sort   = colSort[col]
+  if (!sort) return cards
+  const sorted = [...cards]
+  if (sort === 'priority') {
+    const rank = { high: 0, medium: 1, low: 2 }
+    sorted.sort((a, b) => rank[a.priority] - rank[b.priority])
+  } else if (sort === 'created') {
+    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+  return sorted
 }
 
 function renderCard(card) {
@@ -177,7 +196,7 @@ function saveCard() {
       card.updatedAt   = now
     }
   } else {
-    const colCards = getColCards(col)
+    getColCards(col).forEach(c => { c.order += 1 })
     board.cards.push({
       id:          genId(),
       title,
@@ -185,7 +204,7 @@ function saveCard() {
       priority:    selectedPriority,
       category:    selectedCategory,
       columnId:    col,
-      order:       colCards.length,
+      order:       0,
       createdAt:   now,
       updatedAt:   now
     })
@@ -222,9 +241,19 @@ function setupColumnDropZones() {
       const card = board.cards.find(c => c.id === draggedId)
       if (!card) return
 
+      if (colSort[col]) {
+        bakeSort(col)
+        colSort[col] = null
+        updateSortDropdown(col)
+      }
+
       // Dropped on empty space → append to end
-      card.columnId = col
-      card.order    = getColCards(col).filter(c => c.id !== draggedId).length
+      const now = new Date().toISOString()
+      if (col === 'done' && !card.completedAt) card.completedAt = now
+      else if (col !== 'done') delete card.completedAt
+      card.columnId  = col
+      card.updatedAt = now
+      card.order     = getColCards(col).filter(c => c.id !== draggedId).length
       reorderCol(col)
       draggedId = null
       persistAndRender()
@@ -261,7 +290,17 @@ function onCardDrop(e, targetId, col) {
   const target  = board.cards.find(c => c.id === targetId)
   if (!dragged || !target) return
 
-  dragged.columnId = col
+  if (colSort[col]) {
+    bakeSort(col)
+    colSort[col] = null
+    updateSortDropdown(col)
+  }
+
+  const dropNow = new Date().toISOString()
+  if (col === 'done' && !dragged.completedAt) dragged.completedAt = dropNow
+  else if (col !== 'done') delete dragged.completedAt
+  dragged.columnId  = col
+  dragged.updatedAt = dropNow
 
   // Insert before or after target based on cursor Y
   const rect    = e.currentTarget.getBoundingClientRect()
@@ -300,6 +339,7 @@ function isModalOpen() {
 function persistAndRender() {
   window.kanban.saveBoard(board)
   renderBoard()
+  if (activeTab === 'progress') renderProgress()
 }
 
 // ─── Utilities ────────────────────────────────────────────────
@@ -310,6 +350,145 @@ function genId() {
 function escHtml(str) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
   return String(str).replace(/[&<>"']/g, c => map[c])
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
+      document.getElementById('board-panel').style.display   = activeTab === 'board'    ? '' : 'none'
+      document.getElementById('progress-panel').style.display = activeTab === 'progress' ? '' : 'none'
+      if (activeTab === 'progress') renderProgress()
+    })
+  })
+}
+
+// ─── Progress Tab ──────────────────────────────────────────────
+function setupLearnedSave() {
+  document.getElementById('progress-panel').addEventListener('focusout', (e) => {
+    if (!e.target.classList.contains('learned-input')) return
+    const card = board.cards.find(c => c.id === e.target.dataset.id)
+    if (!card) return
+    card.learned   = e.target.value
+    card.updatedAt = new Date().toISOString()
+    window.kanban.saveBoard(board)
+  })
+}
+
+function renderProgress() {
+  const stats = computeStats()
+  document.getElementById('stat-week-done').textContent     = stats.weekDone
+  document.getElementById('stat-week-progress').textContent = stats.weekInProgress
+  document.getElementById('stat-month-done').textContent    = stats.monthDone
+  document.getElementById('stat-month-progress').textContent = stats.monthInProgress
+
+  const cards = board.cards
+    .filter(c => c.columnId === 'done' || c.columnId === 'in-progress')
+    .map(c => ({ ...c, _sortDate: new Date(c.completedAt || c.updatedAt) }))
+    .sort((a, b) => b._sortDate - a._sortDate)
+
+  const timeline = document.getElementById('progress-timeline')
+  if (cards.length === 0) {
+    timeline.innerHTML = '<div class="timeline-empty">No cards in progress or done yet.</div>'
+    return
+  }
+
+  const groups = new Map()
+  cards.forEach(card => {
+    const key = getWeekStart(card._sortDate).toISOString().slice(0, 10)
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(card)
+  })
+
+  let html = ''
+  groups.forEach((groupCards, weekKey) => {
+    const start = new Date(weekKey + 'T12:00:00')
+    const end   = new Date(start)
+    end.setDate(end.getDate() + 6)
+    html += `<div class="week-group">
+      <div class="week-label">${formatDateRange(start, end)}</div>
+      ${groupCards.map(renderProgressRow).join('')}
+    </div>`
+  })
+  timeline.innerHTML = html
+}
+
+function computeStats() {
+  const now        = new Date()
+  const weekStart  = getWeekStart(now)
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const done       = board.cards.filter(c => c.columnId === 'done')
+  const inProgress = board.cards.filter(c => c.columnId === 'in-progress')
+
+  return {
+    weekDone:        done.filter(c => new Date(c.completedAt || c.updatedAt) >= weekStart).length,
+    weekInProgress:  inProgress.filter(c => new Date(c.updatedAt) >= weekStart).length,
+    monthDone:       done.filter(c => new Date(c.completedAt || c.updatedAt) >= monthStart).length,
+    monthInProgress: inProgress.filter(c => new Date(c.updatedAt) >= monthStart).length,
+  }
+}
+
+function getWeekStart(date) {
+  const d   = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function formatDateRange(start, end) {
+  const opts = { month: 'short', day: 'numeric' }
+  return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`
+}
+
+function renderProgressRow(card) {
+  const cat     = card.category || 'uncategorized'
+  const catChip = cat === 'uncategorized' ? '' :
+    `<span class="category-chip cat-${cat}">${cat}</span>`
+  const dotClass = card.columnId === 'done' ? 'dot-done' : 'dot-progress'
+  const learned  = escHtml(card.learned || '')
+  return `
+    <div class="progress-row">
+      <span class="status-dot ${dotClass}"></span>
+      <div class="progress-row-main">
+        <div class="progress-row-title">${escHtml(card.title)}${catChip ? ' ' + catChip : ''}</div>
+        <textarea class="learned-input" data-id="${card.id}" placeholder="What did you learn?" rows="1">${learned}</textarea>
+      </div>
+    </div>
+  `
+}
+
+// ─── Sort Controls ────────────────────────────────────────────
+function setupSortControls() {
+  COLUMNS.forEach(col => {
+    const header = document.querySelector(`.column[data-col="${col}"] .column-header`)
+    const bar = document.createElement('div')
+    bar.className = 'sort-bar'
+    bar.innerHTML = `
+      <select class="sort-select" data-col="${col}">
+        <option value="">Default order</option>
+        <option value="priority">Priority</option>
+        <option value="created">Created</option>
+      </select>
+    `
+    header.appendChild(bar)
+    bar.querySelector('.sort-select').addEventListener('change', (e) => {
+      colSort[col] = e.target.value || null
+      renderBoard()
+    })
+  })
+}
+
+function bakeSort(col) {
+  getDisplayCards(col).forEach((c, i) => { c.order = i })
+}
+
+function updateSortDropdown(col) {
+  const sel = document.querySelector(`.sort-select[data-col="${col}"]`)
+  if (sel) sel.value = ''
 }
 
 // ─── Start ────────────────────────────────────────────────────

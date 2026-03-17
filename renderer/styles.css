@@ -153,6 +153,47 @@ html, body {
   text-align: center;
 }
 
+/* ─── Sort Bar ────────────────────────────────────────────── */
+.sort-bar {
+  padding-top: 10px;
+}
+
+.sort-select {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2350506e'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.sort-select:hover {
+  border-color: var(--surface-3);
+  color: var(--text);
+}
+
+.sort-select:focus {
+  border-color: var(--col-todo);
+  color: var(--text);
+}
+
+.sort-select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 /* ─── Cards Container ─────────────────────────────────────── */
 .cards-container {
   flex: 1;
@@ -543,3 +584,193 @@ html, body {
 /* ─── Category top-border accent on card ─────────────────── */
 .cat-border-personal    { border-top: 2px solid var(--cat-personal); }
 .cat-border-professional { border-top: 2px solid var(--cat-professional); }
+
+/* ─── Tab Nav ────────────────────────────────────────────── */
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.tab-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.tab-btn.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+/* ─── Progress Panel ─────────────────────────────────────── */
+#progress-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Stat Callout Cards ──────────────────────────────────── */
+.progress-stats-bar {
+  display: flex;
+  gap: 16px;
+  padding: 20px 28px 0;
+  flex-shrink: 0;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.stat-period {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.stat-nums {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-num-done     { color: var(--col-done); }
+.stat-num-progress { color: var(--col-progress); }
+
+.stat-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.stat-sep {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+/* ─── Timeline ───────────────────────────────────────────── */
+.timeline-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.timeline-scroll::-webkit-scrollbar       { width: 4px; }
+.timeline-scroll::-webkit-scrollbar-track { background: transparent; }
+.timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.timeline-empty {
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.week-group {
+  margin-bottom: 28px;
+}
+
+.week-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.progress-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(46, 46, 80, 0.5);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.progress-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.progress-row-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.learned-input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  user-select: text;
+  -webkit-user-select: text;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.learned-input:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.learned-input:focus {
+  border-color: var(--col-todo);
+  background: var(--surface-2);
+  color: var(--text);
+}

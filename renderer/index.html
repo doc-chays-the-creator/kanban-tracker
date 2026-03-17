@@ -15,10 +15,14 @@
         <div class="logo">&#9776;</div>
         <h1>Kanban Tracker</h1>
       </div>
+      <div class="header-center">
+        <button class="tab-btn active" data-tab="board">Board</button>
+        <button class="tab-btn" data-tab="progress">Progress</button>
+      </div>
       <div class="header-stats" id="header-stats">0 tasks</div>
     </header>
 
-    <div class="board">
+    <div class="board" id="board-panel">
 
       <!-- TO-DO -->
       <div class="column" data-col="todo">
@@ -66,6 +70,36 @@
       </div>
 
     </div>
+
+    <!-- Progress Panel -->
+    <div id="progress-panel" style="display:none">
+      <div class="progress-stats-bar">
+        <div class="stat-card">
+          <div class="stat-period">This Week</div>
+          <div class="stat-nums">
+            <span class="stat-num stat-num-done" id="stat-week-done">0</span>
+            <span class="stat-unit">done</span>
+            <span class="stat-sep">·</span>
+            <span class="stat-num stat-num-progress" id="stat-week-progress">0</span>
+            <span class="stat-unit">in progress</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-period">This Month</div>
+          <div class="stat-nums">
+            <span class="stat-num stat-num-done" id="stat-month-done">0</span>
+            <span class="stat-unit">done</span>
+            <span class="stat-sep">·</span>
+            <span class="stat-num stat-num-progress" id="stat-month-progress">0</span>
+            <span class="stat-unit">in progress</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-scroll">
+        <div class="timeline" id="progress-timeline"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Modal -->
