@@ -18,6 +18,7 @@
       <div class="header-center">
         <button class="tab-btn active" data-tab="board">Board</button>
         <button class="tab-btn" data-tab="progress">Progress</button>
+        <button class="tab-btn" data-tab="log">Log</button>
       </div>
       <div class="header-stats" id="header-stats">0 tasks</div>
     </header>
@@ -98,6 +99,82 @@
       <div class="timeline-scroll">
         <div class="timeline" id="progress-timeline"></div>
       </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div id="log-panel" style="display:none">
+
+      <!-- GitHub Settings (hidden by default) -->
+      <div class="log-settings-panel" id="log-settings-panel" style="display:none">
+        <div class="settings-grid">
+          <div class="settings-field">
+            <label>GitHub Token</label>
+            <input type="password" id="cfg-token" placeholder="ghp_...">
+          </div>
+          <div class="settings-field">
+            <label>Owner</label>
+            <input type="text" id="cfg-owner" placeholder="doc-chays-the-creator">
+          </div>
+          <div class="settings-field">
+            <label>Repo</label>
+            <input type="text" id="cfg-repo" placeholder="Daily-Learning-Log">
+          </div>
+          <div class="settings-field">
+            <label>File path</label>
+            <input type="text" id="cfg-path" placeholder="Daily-Learning-Log.md">
+          </div>
+        </div>
+        <button id="cfg-save-btn" class="btn-primary">Save Settings</button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="log-toolbar">
+        <button id="log-add-btn" class="btn-primary">+ New Entry</button>
+        <div class="log-toolbar-right">
+          <span id="sync-status" class="sync-status"></span>
+          <button id="log-sync-btn" class="btn-secondary">&#8593; Sync to GitHub</button>
+          <button id="log-settings-btn" class="icon-btn log-settings-toggle" title="GitHub Settings">&#9881;</button>
+        </div>
+      </div>
+
+      <!-- Entry Form (hidden by default) -->
+      <div class="log-form-wrap" id="log-form-wrap" style="display:none">
+        <div class="log-form">
+          <input type="hidden" id="log-edit-id">
+          <div class="log-form-fields">
+            <div class="log-form-row">
+              <label class="log-form-label">Date</label>
+              <input type="date" id="log-date" class="log-input">
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">Note <span class="log-optional">optional</span></label>
+              <textarea id="log-note" class="log-textarea" rows="2" placeholder="How was the day?"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#10003; Accomplished <span class="log-optional">one per line</span></label>
+              <textarea id="log-accomplished" class="log-textarea" rows="4" placeholder="item&#10;item"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#128218; Learned <span class="log-optional">one per line</span></label>
+              <textarea id="log-learned" class="log-textarea" rows="4" placeholder="item&#10;item"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#127919; Goals for tomorrow <span class="log-optional">one per line</span></label>
+              <textarea id="log-goals" class="log-textarea" rows="3" placeholder="item&#10;item"></textarea>
+            </div>
+          </div>
+          <div class="log-form-actions">
+            <button id="log-form-cancel" class="btn-secondary">Cancel</button>
+            <button id="log-form-save" class="btn-primary">Save Entry</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="log-scroll">
+        <div id="log-timeline"></div>
+      </div>
+
     </div>
 
   </div>

@@ -12,6 +12,7 @@ const COLUMNS = ['todo', 'in-progress', 'done']
 async function init() {
   board = await window.kanban.loadBoard()
   if (!board.cards) board.cards = []
+  if (!board.logEntries) board.logEntries = []
   renderBoard()
   setupColumnDropZones()
   setupModalHandlers()
@@ -19,6 +20,7 @@ async function init() {
   setupTabs()
   setupLearnedSave()
   setupSortControls()
+  setupLogTab()
 }
 
 // ─── Render ───────────────────────────────────────────────────
@@ -358,9 +360,11 @@ function setupTabs() {
     btn.addEventListener('click', () => {
       activeTab = btn.dataset.tab
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
-      document.getElementById('board-panel').style.display   = activeTab === 'board'    ? '' : 'none'
+      document.getElementById('board-panel').style.display    = activeTab === 'board'    ? '' : 'none'
       document.getElementById('progress-panel').style.display = activeTab === 'progress' ? '' : 'none'
+      document.getElementById('log-panel').style.display      = activeTab === 'log'      ? '' : 'none'
       if (activeTab === 'progress') renderProgress()
+      if (activeTab === 'log')      renderLog()
     })
   })
 }
@@ -489,6 +493,241 @@ function bakeSort(col) {
 function updateSortDropdown(col) {
   const sel = document.querySelector(`.sort-select[data-col="${col}"]`)
   if (sel) sel.value = ''
+}
+
+// ─── Log Tab ──────────────────────────────────────────────────
+async function setupLogTab() {
+  const cfg = await window.kanban.loadConfig()
+  if (cfg.githubToken) document.getElementById('cfg-token').value = cfg.githubToken
+  if (cfg.githubOwner) document.getElementById('cfg-owner').value = cfg.githubOwner
+  if (cfg.githubRepo)  document.getElementById('cfg-repo').value  = cfg.githubRepo
+  if (cfg.githubPath)  document.getElementById('cfg-path').value  = cfg.githubPath
+
+  document.getElementById('log-settings-btn').addEventListener('click', () => {
+    const panel = document.getElementById('log-settings-panel')
+    panel.style.display = panel.style.display === 'none' ? '' : 'none'
+  })
+
+  document.getElementById('cfg-save-btn').addEventListener('click', async () => {
+    await window.kanban.saveConfig({
+      githubToken: document.getElementById('cfg-token').value.trim(),
+      githubOwner: document.getElementById('cfg-owner').value.trim(),
+      githubRepo:  document.getElementById('cfg-repo').value.trim(),
+      githubPath:  document.getElementById('cfg-path').value.trim()
+    })
+    document.getElementById('log-settings-panel').style.display = 'none'
+    setSyncStatus('Settings saved', 'ok')
+    setTimeout(() => setSyncStatus('', ''), 2500)
+  })
+
+  document.getElementById('log-add-btn').addEventListener('click', () => openLogForm())
+  document.getElementById('log-form-save').addEventListener('click', saveLogEntry)
+  document.getElementById('log-form-cancel').addEventListener('click', closeLogForm)
+  document.getElementById('log-sync-btn').addEventListener('click', syncToGitHub)
+
+  document.getElementById('log-timeline').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]')
+    if (!btn) return
+    const id = btn.dataset.id
+    if (btn.dataset.action === 'edit-log')   openLogForm(id)
+    if (btn.dataset.action === 'delete-log') deleteLogEntry(id)
+  })
+}
+
+function renderLog() {
+  const entries = [...(board.logEntries || [])].sort((a, b) => new Date(b.date) - new Date(a.date))
+  const timeline = document.getElementById('log-timeline')
+
+  if (entries.length === 0) {
+    timeline.innerHTML = '<div class="log-empty">No entries yet. Click &ldquo;+ New Entry&rdquo; to get started.</div>'
+    return
+  }
+
+  // Group by year → month
+  const byYear = new Map()
+  entries.forEach(entry => {
+    const d = new Date(entry.date + 'T12:00:00')
+    const year  = d.getFullYear().toString()
+    const month = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    if (!byYear.has(year))  byYear.set(year, new Map())
+    const byMonth = byYear.get(year)
+    if (!byMonth.has(month)) byMonth.set(month, [])
+    byMonth.get(month).push(entry)
+  })
+
+  let html = ''
+  byYear.forEach((months, year) => {
+    let monthsHtml = ''
+    months.forEach((monthEntries, monthLabel) => {
+      monthsHtml += `
+        <details class="log-month" open>
+          <summary><span class="log-month-header">${monthLabel}</span></summary>
+          <div class="log-month-body">${monthEntries.map(renderLogEntry).join('')}</div>
+        </details>`
+    })
+    html += `
+      <details class="log-year" open>
+        <summary><span class="log-year-header">${year}</span></summary>
+        ${monthsHtml}
+      </details>`
+  })
+
+  timeline.innerHTML = html
+}
+
+function renderLogEntry(entry) {
+  const d = new Date(entry.date + 'T12:00:00')
+  const dateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+
+  const noteHtml = entry.note
+    ? `<div class="log-entry-note">${escHtml(entry.note)}</div>` : ''
+
+  const section = (emoji, label, items) => {
+    if (!items || !items.length) return ''
+    const lis = items.map(i => `<li>${escHtml(i)}</li>`).join('')
+    return `<div class="log-section">
+      <div class="log-section-title">${emoji} ${label}</div>
+      <ul class="log-section-list">${lis}</ul>
+    </div>`
+  }
+
+  return `
+    <div class="log-entry" id="log-entry-${entry.id}">
+      <div class="log-entry-header">
+        <span class="log-entry-date">${dateLabel}</span>
+        <div class="log-entry-actions">
+          <button class="icon-btn" data-action="edit-log" data-id="${entry.id}" title="Edit">&#9998;</button>
+          <button class="icon-btn delete" data-action="delete-log" data-id="${entry.id}" title="Delete">&#10005;</button>
+        </div>
+      </div>
+      ${noteHtml}
+      ${section('✅', 'Accomplished', entry.accomplished)}
+      ${section('📚', 'Learned', entry.learned)}
+      ${section('🎯', 'Goals for tomorrow', entry.goals)}
+    </div>`
+}
+
+function openLogForm(id = null) {
+  const today = new Date().toISOString().slice(0, 10)
+  document.getElementById('log-edit-id').value = id || ''
+
+  if (id) {
+    const entry = (board.logEntries || []).find(e => e.id === id)
+    if (!entry) return
+    document.getElementById('log-date').value        = entry.date
+    document.getElementById('log-note').value        = entry.note || ''
+    document.getElementById('log-accomplished').value = (entry.accomplished || []).join('\n')
+    document.getElementById('log-learned').value      = (entry.learned || []).join('\n')
+    document.getElementById('log-goals').value        = (entry.goals || []).join('\n')
+  } else {
+    document.getElementById('log-date').value         = today
+    document.getElementById('log-note').value         = ''
+    document.getElementById('log-accomplished').value = ''
+    document.getElementById('log-learned').value      = ''
+    document.getElementById('log-goals').value        = ''
+  }
+
+  document.getElementById('log-form-wrap').style.display = ''
+  document.getElementById('log-date').focus()
+}
+
+function closeLogForm() {
+  document.getElementById('log-form-wrap').style.display = 'none'
+}
+
+function saveLogEntry() {
+  const date = document.getElementById('log-date').value
+  if (!date) { document.getElementById('log-date').focus(); return }
+
+  const id  = document.getElementById('log-edit-id').value
+  const now = new Date().toISOString()
+
+  const entry = {
+    date,
+    note:         document.getElementById('log-note').value.trim(),
+    accomplished: parseLogItems(document.getElementById('log-accomplished').value),
+    learned:      parseLogItems(document.getElementById('log-learned').value),
+    goals:        parseLogItems(document.getElementById('log-goals').value),
+    updatedAt:    now
+  }
+
+  if (!board.logEntries) board.logEntries = []
+
+  if (id) {
+    const idx = board.logEntries.findIndex(e => e.id === id)
+    if (idx >= 0) board.logEntries[idx] = { ...board.logEntries[idx], ...entry }
+  } else {
+    board.logEntries.push({ id: genId(), createdAt: now, ...entry })
+  }
+
+  closeLogForm()
+  window.kanban.saveBoard(board)
+  renderLog()
+}
+
+function deleteLogEntry(id) {
+  board.logEntries = (board.logEntries || []).filter(e => e.id !== id)
+  window.kanban.saveBoard(board)
+  renderLog()
+}
+
+function parseLogItems(text) {
+  return text.split('\n')
+    .map(line => line.replace(/^[-*•]\s*/, '').trim())
+    .filter(Boolean)
+}
+
+function generateMarkdown() {
+  const entries = [...(board.logEntries || [])].sort((a, b) => new Date(b.date) - new Date(a.date))
+  if (entries.length === 0) return '# Daily Learning Log\n'
+
+  return entries.map(entry => {
+    const lines = ['# Daily Learning Log', `## ${entry.date}`]
+    if (entry.note) lines.push(entry.note)
+    lines.push('### ✅ What I accomplished')
+    ;(entry.accomplished || []).forEach(i => lines.push(`- ${i}`))
+    lines.push('### 📚 What I learned')
+    ;(entry.learned || []).forEach(i => lines.push(`- ${i}`))
+    lines.push('### 🎯 Goals for tomorrow')
+    ;(entry.goals || []).forEach(i => lines.push(`- ${i}`))
+    return lines.join('\n')
+  }).join('\n\n---\n\n')
+}
+
+async function syncToGitHub() {
+  const cfg = await window.kanban.loadConfig()
+
+  if (!cfg.githubToken) {
+    setSyncStatus('Add your GitHub token in settings ⚙', 'error')
+    document.getElementById('log-settings-panel').style.display = ''
+    return
+  }
+
+  setSyncStatus('Syncing…', 'pending')
+  document.getElementById('log-sync-btn').disabled = true
+
+  const result = await window.kanban.syncLog({
+    token:    cfg.githubToken,
+    owner:    cfg.githubOwner || 'doc-chays-the-creator',
+    repo:     cfg.githubRepo  || 'Daily-Learning-Log',
+    filePath: cfg.githubPath  || 'Daily-Learning-Log.md',
+    content:  generateMarkdown()
+  })
+
+  document.getElementById('log-sync-btn').disabled = false
+
+  if (result.success) {
+    setSyncStatus('Synced ✓', 'ok')
+    setTimeout(() => setSyncStatus('', ''), 3000)
+  } else {
+    setSyncStatus(`Failed: ${result.error}`, 'error')
+  }
+}
+
+function setSyncStatus(msg, state) {
+  const el = document.getElementById('sync-status')
+  el.textContent = msg
+  el.className = `sync-status${state ? ' sync-' + state : ''}`
 }
 
 // ─── Start ────────────────────────────────────────────────────
