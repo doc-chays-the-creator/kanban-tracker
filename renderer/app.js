@@ -523,6 +523,7 @@ async function setupLogTab() {
   document.getElementById('log-add-btn').addEventListener('click', () => openLogForm())
   document.getElementById('log-form-save').addEventListener('click', saveLogEntry)
   document.getElementById('log-form-cancel').addEventListener('click', closeLogForm)
+  document.getElementById('log-pull-btn').addEventListener('click', pullFromGitHub)
   document.getElementById('log-sync-btn').addEventListener('click', syncToGitHub)
 
   document.getElementById('log-timeline').addEventListener('click', (e) => {
@@ -692,6 +693,97 @@ function generateMarkdown() {
     ;(entry.goals || []).forEach(i => lines.push(`- ${i}`))
     return lines.join('\n')
   }).join('\n\n---\n\n')
+}
+
+function parseMarkdownEntries(markdown) {
+  const entries = []
+  const dateRegex = /^## (\d{4}-\d{2}-\d{2})/gm
+  const positions = []
+  let match
+
+  while ((match = dateRegex.exec(markdown)) !== null) {
+    positions.push({ date: match[1], index: match.index })
+  }
+
+  for (let i = 0; i < positions.length; i++) {
+    const { date, index } = positions[i]
+    const nextIndex = positions[i + 1]?.index ?? markdown.length
+    const block = markdown.slice(index, nextIndex)
+
+    // Text after the ## date line and before first ### is the note
+    const afterDate = block.slice(block.indexOf('\n') + 1)
+    const firstSection = afterDate.indexOf('\n### ')
+    const note = (firstSection >= 0 ? afterDate.slice(0, firstSection) : afterDate).trim()
+
+    const parseItems = (sectionRegex) => {
+      const m = block.match(sectionRegex)
+      if (!m) return []
+      return m[1].split('\n')
+        .map(l => l.replace(/^[-*•]\s*/, '').trim())
+        .filter(Boolean)
+    }
+
+    entries.push({
+      date,
+      note,
+      accomplished: parseItems(/### ✅[^\n]*\n([\s\S]*?)(?=\n###|$)/),
+      learned:      parseItems(/### 📚[^\n]*\n([\s\S]*?)(?=\n###|$)/),
+      goals:        parseItems(/### 🎯[^\n]*\n([\s\S]*?)(?=\n###|$)/)
+    })
+  }
+
+  return entries
+}
+
+async function pullFromGitHub() {
+  const cfg = await window.kanban.loadConfig()
+
+  if (!cfg.githubToken) {
+    setSyncStatus('Add your GitHub token in settings ⚙', 'error')
+    document.getElementById('log-settings-panel').style.display = ''
+    return
+  }
+
+  setSyncStatus('Pulling…', 'pending')
+  document.getElementById('log-pull-btn').disabled = true
+
+  const result = await window.kanban.fetchLog({
+    token:    cfg.githubToken,
+    owner:    cfg.githubOwner || 'doc-chays-the-creator',
+    repo:     cfg.githubRepo  || 'Daily-Learning-Log',
+    filePath: cfg.githubPath  || 'Daily-Learning-Log.md'
+  })
+
+  document.getElementById('log-pull-btn').disabled = false
+
+  if (!result.success) {
+    setSyncStatus(`Pull failed: ${result.error}`, 'error')
+    return
+  }
+
+  const remoteEntries = parseMarkdownEntries(result.content)
+  if (!board.logEntries) board.logEntries = []
+
+  const localDates = new Set(board.logEntries.map(e => e.date))
+  const now = new Date().toISOString()
+  let imported = 0
+
+  for (const entry of remoteEntries) {
+    if (!localDates.has(entry.date)) {
+      board.logEntries.push({ id: genId(), createdAt: now, updatedAt: now, ...entry })
+      imported++
+    }
+  }
+
+  if (imported > 0) {
+    window.kanban.saveBoard(board)
+    renderLog()
+    setSyncStatus(`Pulled ${imported} new entr${imported === 1 ? 'y' : 'ies'} ✓`, 'ok')
+  } else {
+    setSyncStatus('Already up to date ✓', 'ok')
+  }
+
+  setTimeout(() => setSyncStatus('', ''), 3000)
 }
 
 async function syncToGitHub() {

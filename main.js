@@ -43,6 +43,28 @@ app.whenReady().then(() => {
     } catch { return false }
   })
 
+  ipcMain.handle('log:fetch-github', async (_event, { token, owner, repo, filePath }) => {
+    try {
+      const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'kanban-tracker'
+      }
+      const getRes = await fetch(apiBase, { headers })
+      if (!getRes.ok) {
+        const errData = await getRes.json()
+        return { success: false, error: errData.message || `HTTP ${getRes.status}` }
+      }
+      const fileData = await getRes.json()
+      const content = Buffer.from(fileData.content, 'base64').toString('utf-8')
+      return { success: true, content }
+    } catch (e) {
+      return { success: false, error: e.message }
+    }
+  })
+
   ipcMain.handle('log:sync-github', async (_event, { token, owner, repo, filePath, content }) => {
     try {
       const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`
@@ -97,6 +119,19 @@ app.whenReady().then(() => {
   })
 
   mainWindow.loadFile('renderer/index.html')
+
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (!input.control || input.type !== 'keyDown') return
+    const wc = mainWindow.webContents
+    const current = wc.getZoomFactor()
+    if (input.key === '=' || input.key === '+') {
+      wc.setZoomFactor(Math.min(current + 0.1, 3.0))
+    } else if (input.key === '-') {
+      wc.setZoomFactor(Math.max(current - 0.1, 0.3))
+    } else if (input.key === '0') {
+      wc.setZoomFactor(1.0)
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

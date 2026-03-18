@@ -780,7 +780,7 @@ html, body {
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* ─── GitHub Settings ────────────────────────────────────── */

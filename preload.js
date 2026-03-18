@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('kanban', {
   saveBoard:   (data) => ipcRenderer.invoke('board:save', data),
   loadConfig:  () => ipcRenderer.invoke('config:load'),
   saveConfig:  (data) => ipcRenderer.invoke('config:save', data),
-  syncLog:     (params) => ipcRenderer.invoke('log:sync-github', params)
+  syncLog:     (params) => ipcRenderer.invoke('log:sync-github', params),
+  fetchLog:    (params) => ipcRenderer.invoke('log:fetch-github', params)
 })
