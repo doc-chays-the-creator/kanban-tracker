@@ -101,7 +101,6 @@ html, body {
   flex-direction: column;
   flex: 1;
   min-width: 280px;
-  max-width: 380px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);

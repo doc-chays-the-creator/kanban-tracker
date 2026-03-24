@@ -1,0 +1,5 @@
+const e = require('electron')
+console.log('typeof electron:', typeof e)
+console.log('electron value:', e)
+console.log('process.versions.electron:', process.versions && process.versions.electron)
+console.log('process.type:', process.type)
