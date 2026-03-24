@@ -110,7 +110,7 @@ app.whenReady().then(() => {
     minWidth: 900,
     minHeight: 600,
     title: 'Kanban Tracker',
-    backgroundColor: '#0f0f17',
+    backgroundColor: '#f4efe5',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

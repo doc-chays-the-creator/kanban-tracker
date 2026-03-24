@@ -2,29 +2,29 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #0f0f17;
-  --surface:    #16162a;
-  --surface-2:  #1e1e35;
-  --surface-3:  #252542;
-  --border:     #2e2e50;
-  --text:       #e8e8f0;
-  --text-muted: #7878a0;
-  --text-dim:   #50506e;
+  --bg:         #f4efe5;
+  --surface:    #fdfbf7;
+  --surface-2:  #f0eade;
+  --surface-3:  #e5dfd2;
+  --border:     #d0c8b8;
+  --text:       #2c2820;
+  --text-muted: #6b6255;
+  --text-dim:   #9e9282;
 
-  --col-todo:     #5b5bff;
-  --col-progress: #ff9d3d;
-  --col-done:     #3dffb4;
+  --col-todo:     #4a8ee0;
+  --col-progress: #e8a020;
+  --col-done:     #28a86e;
 
-  --p-low:    #3d9bff;
-  --p-medium: #ff9d3d;
-  --p-high:   #ff4e6a;
+  --p-low:    #4a8ee0;
+  --p-medium: #e8a020;
+  --p-high:   #dc4545;
 
-  --cat-personal:     #c084fc;
-  --cat-professional: #22d3ee;
+  --cat-personal:     #9b6fd4;
+  --cat-professional: #2aabcc;
 
   --radius:    10px;
   --radius-sm: 6px;
-  --shadow:    0 4px 24px rgba(0,0,0,0.4);
+  --shadow:    0 4px 20px rgba(0,0,0,0.08);
   --transition: 0.18s ease;
 }
 
@@ -128,9 +128,9 @@ html, body {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.dot-todo     { background: var(--col-todo); box-shadow: 0 0 6px var(--col-todo); }
-.dot-progress { background: var(--col-progress); box-shadow: 0 0 6px var(--col-progress); }
-.dot-done     { background: var(--col-done); box-shadow: 0 0 6px var(--col-done); }
+.dot-todo     { background: var(--col-todo); }
+.dot-progress { background: var(--col-progress); }
+.dot-done     { background: var(--col-done); }
 
 .column-title {
   font-size: 13px;
@@ -171,7 +171,7 @@ html, body {
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2350506e'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239e9282'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
   padding-right: 24px;
@@ -210,7 +210,7 @@ html, body {
 .cards-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .cards-container.drag-over {
-  background: rgba(91, 91, 255, 0.04);
+  background: rgba(74, 142, 224, 0.06);
   border-radius: var(--radius-sm);
 }
 
@@ -282,9 +282,9 @@ html, body {
   padding: 2px 7px;
   border-radius: 4px;
 }
-.priority-badge-low    { color: var(--p-low);    background: rgba(61, 155, 255, 0.12); }
-.priority-badge-medium { color: var(--p-medium); background: rgba(255, 157, 61, 0.12); }
-.priority-badge-high   { color: var(--p-high);   background: rgba(255, 78, 106, 0.12); }
+.priority-badge-low    { color: var(--p-low);    background: rgba(74, 142, 224, 0.12); }
+.priority-badge-medium { color: var(--p-medium); background: rgba(232, 160, 32, 0.14); }
+.priority-badge-high   { color: var(--p-high);   background: rgba(220, 69, 69, 0.12); }
 
 .card-actions {
   display: flex;
@@ -357,7 +357,7 @@ html, body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(44, 40, 32, 0.35);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -379,7 +379,7 @@ html, body {
   border-radius: var(--radius);
   width: 440px;
   max-width: 90vw;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.15);
   transform: scale(0.95) translateY(8px);
   transition: transform 0.2s ease;
 }
@@ -484,9 +484,9 @@ html, body {
 
 .priority-btn:hover { border-color: var(--surface-3); color: var(--text); }
 
-.priority-btn[data-p="low"].active    { background: rgba(61,155,255,0.15); border-color: var(--p-low);    color: var(--p-low); }
-.priority-btn[data-p="medium"].active { background: rgba(255,157,61,0.15); border-color: var(--p-medium); color: var(--p-medium); }
-.priority-btn[data-p="high"].active   { background: rgba(255,78,106,0.15); border-color: var(--p-high);   color: var(--p-high); }
+.priority-btn[data-p="low"].active    { background: rgba(74,142,224,0.14); border-color: var(--p-low);    color: var(--p-low); }
+.priority-btn[data-p="medium"].active { background: rgba(232,160,32,0.15); border-color: var(--p-medium); color: var(--p-medium); }
+.priority-btn[data-p="high"].active   { background: rgba(220,69,69,0.13);  border-color: var(--p-high);   color: var(--p-high); }
 
 .modal-footer {
   display: flex;
@@ -544,17 +544,17 @@ html, body {
 .category-btn:hover { border-color: var(--surface-3); color: var(--text); }
 
 .category-btn[data-cat="uncategorized"].active {
-  background: rgba(80,80,110,0.2);
+  background: rgba(158,146,130,0.15);
   border-color: var(--text-dim);
   color: var(--text-muted);
 }
 .category-btn[data-cat="personal"].active {
-  background: rgba(192,132,252,0.15);
+  background: rgba(155,111,212,0.13);
   border-color: var(--cat-personal);
   color: var(--cat-personal);
 }
 .category-btn[data-cat="professional"].active {
-  background: rgba(34,211,238,0.15);
+  background: rgba(42,171,204,0.13);
   border-color: var(--cat-professional);
   color: var(--cat-professional);
 }
@@ -573,11 +573,11 @@ html, body {
 
 .cat-personal {
   color: var(--cat-personal);
-  background: rgba(192,132,252,0.12);
+  background: rgba(155,111,212,0.12);
 }
 .cat-professional {
   color: var(--cat-professional);
-  background: rgba(34,211,238,0.12);
+  background: rgba(42,171,204,0.12);
 }
 
 /* ─── Category top-border accent on card ─────────────────── */
@@ -716,7 +716,7 @@ html, body {
   align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(46, 46, 80, 0.5);
+  border-bottom: 1px solid rgba(180, 168, 148, 0.5);
 }
 
 .status-dot {
@@ -910,7 +910,7 @@ html, body {
 .log-textarea:focus { border-color: var(--col-todo); }
 
 .log-input[type="date"] {
-  color-scheme: dark;
+  color-scheme: light;
   max-width: 200px;
   resize: none;
 }
@@ -1001,7 +1001,7 @@ details.log-month:not([open]) .log-month-header::before {
 /* Day entry */
 .log-entry {
   padding: 14px 0;
-  border-bottom: 1px solid rgba(46,46,80,0.5);
+  border-bottom: 1px solid rgba(180,168,148,0.5);
 }
 
 .log-entry:last-child { border-bottom: none; }
