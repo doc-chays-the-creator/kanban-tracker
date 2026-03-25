@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Kanban Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">&#9776;</div>
+        <h1>Kanban Tracker</h1>
+      </div>
+      <div class="header-center">
+        <button class="tab-btn active" data-tab="board">Board</button>
+        <button class="tab-btn" data-tab="progress">Progress</button>
+        <button class="tab-btn" data-tab="log">Log</button>
+      </div>
+      <div class="header-stats" id="header-stats">0 tasks</div>
+    </header>
+
+    <div class="board" id="board-panel">
+
+      <!-- TO-DO -->
+      <div class="column" data-col="todo">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-todo"></span>
+            <span class="column-title">To&#8209;Do</span>
+          </div>
+          <span class="card-count" id="count-todo">0</span>
+        </div>
+        <div class="cards-container" id="cards-todo" data-col="todo"></div>
+        <button class="add-btn" data-col="todo">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+      <!-- IN PROGRESS -->
+      <div class="column" data-col="in-progress">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-progress"></span>
+            <span class="column-title">In Progress</span>
+          </div>
+          <span class="card-count" id="count-in-progress">0</span>
+        </div>
+        <div class="cards-container" id="cards-in-progress" data-col="in-progress"></div>
+        <button class="add-btn" data-col="in-progress">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+      <!-- FINISHED -->
+      <div class="column" data-col="done">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-dot dot-done"></span>
+            <span class="column-title">Finished</span>
+          </div>
+          <span class="card-count" id="count-done">0</span>
+        </div>
+        <div class="cards-container" id="cards-done" data-col="done"></div>
+        <button class="add-btn" data-col="done">
+          <span class="add-icon">+</span> Add Card
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Progress Panel -->
+    <div id="progress-panel" style="display:none">
+      <div class="progress-stats-bar">
+        <div class="stat-card">
+          <div class="stat-period">This Week</div>
+          <div class="stat-nums">
+            <span class="stat-num stat-num-done" id="stat-week-done">0</span>
+            <span class="stat-unit">done</span>
+            <span class="stat-sep">·</span>
+            <span class="stat-num stat-num-progress" id="stat-week-progress">0</span>
+            <span class="stat-unit">in progress</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-period">This Month</div>
+          <div class="stat-nums">
+            <span class="stat-num stat-num-done" id="stat-month-done">0</span>
+            <span class="stat-unit">done</span>
+            <span class="stat-sep">·</span>
+            <span class="stat-num stat-num-progress" id="stat-month-progress">0</span>
+            <span class="stat-unit">in progress</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-scroll">
+        <div class="timeline" id="progress-timeline"></div>
+      </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div id="log-panel" style="display:none">
+
+      <!-- GitHub Settings (hidden by default) -->
+      <div class="log-settings-panel" id="log-settings-panel" style="display:none">
+        <div class="settings-grid">
+          <div class="settings-field">
+            <label>GitHub Token</label>
+            <input type="password" id="cfg-token" placeholder="ghp_...">
+          </div>
+          <div class="settings-field">
+            <label>Owner</label>
+            <input type="text" id="cfg-owner" placeholder="doc-chays-the-creator">
+          </div>
+          <div class="settings-field">
+            <label>Repo</label>
+            <input type="text" id="cfg-repo" placeholder="Daily-Learning-Log">
+          </div>
+          <div class="settings-field">
+            <label>File path</label>
+            <input type="text" id="cfg-path" placeholder="Daily-Learning-Log.md">
+          </div>
+        </div>
+        <button id="cfg-save-btn" class="btn-primary">Save Settings</button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="log-toolbar">
+        <button id="log-add-btn" class="btn-primary">+ New Entry</button>
+        <div class="log-toolbar-right">
+          <span id="sync-status" class="sync-status"></span>
+          <button id="log-pull-btn" class="btn-secondary">&#8595; Pull from GitHub</button>
+          <button id="log-sync-btn" class="btn-secondary">&#8593; Sync to GitHub</button>
+          <button id="log-settings-btn" class="icon-btn log-settings-toggle" title="GitHub Settings">&#9881;</button>
+        </div>
+      </div>
+
+      <!-- Entry Form (hidden by default) -->
+      <div class="log-form-wrap" id="log-form-wrap" style="display:none">
+        <div class="log-form">
+          <input type="hidden" id="log-edit-id">
+          <div class="log-form-fields">
+            <div class="log-form-row">
+              <label class="log-form-label">Date</label>
+              <input type="date" id="log-date" class="log-input">
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">Note <span class="log-optional">optional</span></label>
+              <textarea id="log-note" class="log-textarea" rows="2" placeholder="How was the day?"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#10003; Accomplished <span class="log-optional">one per line</span></label>
+              <textarea id="log-accomplished" class="log-textarea" rows="4" placeholder="item&#10;item"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#128218; Learned <span class="log-optional">one per line</span></label>
+              <textarea id="log-learned" class="log-textarea" rows="4" placeholder="item&#10;item"></textarea>
+            </div>
+            <div class="log-form-row">
+              <label class="log-form-label">&#127919; Goals for tomorrow <span class="log-optional">one per line</span></label>
+              <textarea id="log-goals" class="log-textarea" rows="3" placeholder="item&#10;item"></textarea>
+            </div>
+          </div>
+          <div class="log-form-actions">
+            <button id="log-form-cancel" class="btn-secondary">Cancel</button>
+            <button id="log-form-save" class="btn-primary">Save Entry</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="log-scroll">
+        <div id="log-timeline"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Card</h2>
+        <button class="modal-close" id="modal-close-btn">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-column">
+
+        <div class="form-group">
+          <label for="card-title">Title <span class="required">*</span></label>
+          <input type="text" id="card-title" placeholder="What needs to be done?">
+        </div>
+
+        <div class="form-group">
+          <label for="card-desc">Description</label>
+          <textarea id="card-desc" placeholder="Optional details..." rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <div class="category-selector" id="category-selector">
+            <button class="category-btn active" data-cat="uncategorized">Uncategorized</button>
+            <button class="category-btn" data-cat="personal">Personal</button>
+            <button class="category-btn" data-cat="professional">Professional</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Priority</label>
+          <div class="priority-selector" id="priority-selector">
+            <button class="priority-btn" data-p="low">Low</button>
+            <button class="priority-btn active" data-p="medium">Medium</button>
+            <button class="priority-btn" data-p="high">High</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+        <button class="btn-primary" id="modal-save-btn">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="mock.js"></script><script src="app.js"></script>
+</body>
+</html>
